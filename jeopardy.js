@@ -1,3 +1,4 @@
+const NUM_CATEGORIES = 6;
 let categories = [];
 // categories is the main data structure for the app; it looks like this:
 
@@ -19,7 +20,21 @@ let categories = [];
 //    ...
 //  ]
 
-function getCategoryIds() {}
+async function getCategoryIds() {
+	const res = await axios.get("http://jservice.io/api/categories", {
+		params: {
+			count: 100
+		}
+	});
+	const randomCats = _.sampleSize(res.data, NUM_CATEGORIES);
+	let catIds = [];
+	for (cat of randomCats) {
+		let catId = cat.id;
+		catIds.push(catId);
+	}
+	console.log(catIds);
+	return catIds;
+}
 /** Get NUM_CATEGORIES random category from API.
  *
  * Returns array of category ids
