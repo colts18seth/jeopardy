@@ -1,4 +1,3 @@
-const NUM_CATEGORIES = 6;
 let categories = [];
 // categories is the main data structure for the app; it looks like this:
 
@@ -20,27 +19,35 @@ let categories = [];
 //    ...
 //  ]
 
-async function getCategoryIds() {
-	const res = await axios.get("http://jservice.io/api/categories", {
-		params: {
-			count: 100
-		}
-	});
-	const randomCats = _.sampleSize(res.data, NUM_CATEGORIES);
-	let catIds = [];
+function getCategoryIds(resCats) {
+	//Get NUM_CATEGORIES random category from API.
+	const NUM_CATEGORIES = 6;
+	const randomCats = _.sampleSize(resCats.data, NUM_CATEGORIES);
+	let idArr = [];
 	for (cat of randomCats) {
 		let catId = cat.id;
-		catIds.push(catId);
+		idArr.push(catId);
 	}
-	console.log(catIds);
-	return catIds;
+	//Returns array of category ids
+	return idArr;
 }
-/** Get NUM_CATEGORIES random category from API.
- *
- * Returns array of category ids
- */
 
-function getCategory(catId) {}
+function getCategory(catId) {
+	catId.data.map((arr) => {
+		let catData = {
+			title: arr.category.title,
+			clues: [
+				{
+					question: arr.question,
+					answer: arr.answer,
+					showing: null
+				}
+			]
+		};
+		categories.push(catData);
+		return catData;
+	});
+}
 /** Return object with data about a category:
  *
  *  Returns { title: "Math", clues: clue-array }
@@ -53,7 +60,14 @@ function getCategory(catId) {}
  *   ]
  */
 
-async function fillTable() {}
+async function fillTable() {
+	const table = $("#jeopardy");
+	const thead = $("thead");
+	const tbody = $("tbody");
+	console.log(table);
+	console.log(thead);
+	console.log(tbody);
+}
 /** Fill the HTML table#jeopardy with the categories & cells for questions.
  *
  * - The <thead> should be filled w/a <tr>, and a <td> for each category
@@ -71,7 +85,26 @@ function handleClick(evt) {}
  * - if currently "answer", ignore click
  * */
 
-async function setupAndStart() {}
+async function setupAndStart() {
+	const resCats = await axios.get("http://jservice.io/api/categories", {
+		params: {
+			count: 100
+		}
+	});
+	let catIds = getCategoryIds(resCats);
+
+	for (id of catIds) {
+		const resTitles = await axios.get("http://jservice.io/api/clues", {
+			params: {
+				category: id
+			}
+		});
+		getCategory(resTitles);
+	}
+
+	fillTable();
+}
+
 /** Start game:
  *
  * - get random category Ids
