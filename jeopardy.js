@@ -1,3 +1,5 @@
+const NUM_CATEGORIES = 6;
+const NUM_QUESTIONS_PER_CAT = 5;
 let categories = [];
 // categories is the main data structure for the app; it looks like this:
 
@@ -21,7 +23,6 @@ let categories = [];
 
 function getCategoryIds(resCats) {
 	//Get NUM_CATEGORIES random category from API.
-	const NUM_CATEGORIES = 6;
 	const randomCats = _.sampleSize(resCats.data, NUM_CATEGORIES);
 	let idArr = [];
 	for (cat of randomCats) {
@@ -33,7 +34,16 @@ function getCategoryIds(resCats) {
 }
 
 function getCategory(catId) {
-	catId.data.map((arr) => {
+	let arr = [];
+	let count = 0;
+	for (data of catId.data) {
+		if (count < 5) {
+			count++;
+			arr.push(data);
+		}
+	}
+
+	arr.map((arr) => {
 		let catData = {
 			title: arr.category.title,
 			clues: [
@@ -45,7 +55,6 @@ function getCategory(catId) {
 			]
 		};
 		categories.push(catData);
-		return catData;
 	});
 }
 /** Return object with data about a category:
@@ -60,13 +69,32 @@ function getCategory(catId) {
  *   ]
  */
 
-async function fillTable() {
-	const table = $("#jeopardy");
-	const thead = $("thead");
-	const tbody = $("tbody");
-	console.log(table);
-	console.log(thead);
-	console.log(tbody);
+function fillTable() {
+	let singleTitle = [];
+	for (i = 0; i < categories.length; i++) {
+		if (categories[i].title !== categories[i + 1].title) {
+			singleTitle.push(categories);
+		}
+	}
+
+	const top = document.createElement("tr");
+	for (let x = 0; x < NUM_CATEGORIES; x++) {
+		const headCell = document.createElement("td");
+		headCell.setAttribute("id", `${x}`);
+		top.append(headCell);
+	}
+	$("thead").append(top);
+
+	for (let y = 0; y < NUM_QUESTIONS_PER_CAT; y++) {
+		const row = document.createElement("tr");
+		for (let x = 0; x < NUM_CATEGORIES; x++) {
+			const cell = document.createElement("td");
+			cell.setAttribute("id", `${x}-${y}`);
+			cell.innerText = "?";
+			row.append(cell);
+		}
+		$("#jeopardy").append(row);
+	}
 }
 /** Fill the HTML table#jeopardy with the categories & cells for questions.
  *
@@ -86,6 +114,7 @@ function handleClick(evt) {}
  * */
 
 async function setupAndStart() {
+	categories = [];
 	const resCats = await axios.get("http://jservice.io/api/categories", {
 		params: {
 			count: 100
