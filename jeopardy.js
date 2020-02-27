@@ -1,8 +1,8 @@
 const NUM_CATEGORIES = 6;
 const NUM_QUESTIONS_PER_CAT = 5;
 let categories = [];
-// categories is the main data structure for the app; it looks like this:
 
+// categories is the main data structure for the app; it looks like this:
 //  [
 //    { title: "Math",
 //      clues: [
@@ -21,42 +21,40 @@ let categories = [];
 //    ...
 //  ]
 
-function getCategoryIds(resCats) {
-	//Get NUM_CATEGORIES random category from API.
-	const randomCats = _.sampleSize(resCats.data, NUM_CATEGORIES);
-	let idArr = [];
-	for (cat of randomCats) {
-		let catId = cat.id;
-		idArr.push(catId);
+function getCategoryIds(catIds) {
+	let randomIds = _.sampleSize(catIds.data, NUM_CATEGORIES);
+	let categoryIds = [];
+	for (cat of randomIds) {
+		categoryIds.push(cat.id);
 	}
-	//Returns array of category ids
-	return idArr;
+	return categoryIds;
 }
+/** Get NUM_CATEGORIES random category from API.
+ *
+ * Returns array of category ids
+ */
 
 function getCategory(catId) {
-	let arr = [];
-	let count = 0;
-	for (data of catId.data) {
-		if (count < 5) {
-			count++;
-			arr.push(data);
-		}
-	}
+	let cat = catId.data;
+	let cluesArr = [];
+	let clues = _.sampleSize(cat, NUM_QUESTIONS_PER_CAT);
+	let catData = {
+		title: cat[0].category.title,
+		clues: []
+	};
 
-	arr.map((arr) => {
-		let catData = {
-			title: arr.category.title,
-			clues: [
-				{
-					question: arr.question,
-					answer: arr.answer,
-					showing: null
-				}
-			]
+	clues.map((arr) => {
+		let cluesArr = {
+			question: arr.question,
+			answer: arr.answer,
+			showing: null
 		};
-		categories.push(catData);
+		catData.clues.push(cluesArr);
 	});
+
+	categories.push(catData);
 }
+
 /** Return object with data about a category:
  *
  *  Returns { title: "Math", clues: clue-array }
@@ -70,32 +68,33 @@ function getCategory(catId) {
  */
 
 function fillTable() {
-	let singleTitle = [];
-	for (i = 0; i < categories.length; i++) {
-		if (categories[i].title !== categories[i + 1].title) {
-			singleTitle.push(categories);
-		}
-	}
+	let titles = categories.map((title) => {
+		return title.title;
+	});
 
-	const top = document.createElement("tr");
+	const jeoparyBoard = $("#jeopardy");
+	const topRow = document.createElement("tr");
+
 	for (let x = 0; x < NUM_CATEGORIES; x++) {
-		const headCell = document.createElement("td");
-		headCell.setAttribute("id", `${x}`);
-		top.append(headCell);
+		const catHeader = document.createElement("td");
+		catHeader.innerText = titles[x];
+		topRow.append(catHeader);
 	}
-	$("thead").append(top);
+	jeoparyBoard.append(topRow);
 
 	for (let y = 0; y < NUM_QUESTIONS_PER_CAT; y++) {
 		const row = document.createElement("tr");
 		for (let x = 0; x < NUM_CATEGORIES; x++) {
 			const cell = document.createElement("td");
-			cell.setAttribute("id", `${x}-${y}`);
 			cell.innerText = "?";
 			row.append(cell);
 		}
-		$("#jeopardy").append(row);
+		jeoparyBoard.append(row);
 	}
 }
+
+// cell.innerText = categories[x].clues[y].question;
+
 /** Fill the HTML table#jeopardy with the categories & cells for questions.
  *
  * - The <thead> should be filled w/a <tr>, and a <td> for each category
@@ -114,13 +113,12 @@ function handleClick(evt) {}
  * */
 
 async function setupAndStart() {
-	categories = [];
-	const resCats = await axios.get("http://jservice.io/api/categories", {
+	const resCategories = await axios.get("http://jservice.io/api/categories", {
 		params: {
-			count: 100
+			count: 50
 		}
 	});
-	let catIds = getCategoryIds(resCats);
+	let catIds = getCategoryIds(resCategories);
 
 	for (id of catIds) {
 		const resTitles = await axios.get("http://jservice.io/api/clues", {
@@ -130,10 +128,8 @@ async function setupAndStart() {
 		});
 		getCategory(resTitles);
 	}
-
 	fillTable();
 }
-
 /** Start game:
  *
  * - get random category Ids
@@ -141,10 +137,8 @@ async function setupAndStart() {
  * - create HTML table
  * */
 
+// TODO
 /** On click of restart button, restart game. */
 
 // TODO
-
 /** On page load, setup and start & add event handler for clicking clues */
-
-// TODO
