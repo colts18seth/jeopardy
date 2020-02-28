@@ -1,5 +1,6 @@
 const NUM_CATEGORIES = 6;
 const NUM_QUESTIONS_PER_CAT = 5;
+const jeopardyBoard = $("#jeopardy");
 let categories = [];
 
 // categories is the main data structure for the app; it looks like this:
@@ -36,7 +37,6 @@ function getCategoryIds(catIds) {
 
 function getCategory(catId) {
 	let cat = catId.data;
-	let cluesArr = [];
 	let clues = _.sampleSize(cat, NUM_QUESTIONS_PER_CAT);
 	let catData = {
 		title: cat[0].category.title,
@@ -72,7 +72,6 @@ function fillTable() {
 		return title.title;
 	});
 
-	const jeoparyBoard = $("#jeopardy");
 	const topRow = document.createElement("tr");
 
 	for (let x = 0; x < NUM_CATEGORIES; x++) {
@@ -80,21 +79,18 @@ function fillTable() {
 		catHeader.innerText = titles[x];
 		topRow.append(catHeader);
 	}
-	jeoparyBoard.append(topRow);
+	jeopardyBoard.append(topRow);
 
 	for (let y = 0; y < NUM_QUESTIONS_PER_CAT; y++) {
 		const row = document.createElement("tr");
 		for (let x = 0; x < NUM_CATEGORIES; x++) {
 			const cell = document.createElement("td");
-			cell.innerText = "?";
+			cell.innerHTML = `<div id=${categories[x].clues[y].showing}>?</div>`;
 			row.append(cell);
 		}
-		jeoparyBoard.append(row);
+		jeopardyBoard.append(row);
 	}
 }
-
-// cell.innerText = categories[x].clues[y].question;
-
 /** Fill the HTML table#jeopardy with the categories & cells for questions.
  *
  * - The <thead> should be filled w/a <tr>, and a <td> for each category
@@ -103,7 +99,18 @@ function fillTable() {
  *   (initally, just show a "?" where the question/answer would go.)
  */
 
-function handleClick(evt) {}
+function handleClick(e) {
+	if ($(e.target).is("div")) {
+		if (e.target.id === "null") {
+			e.target.id = "question";
+		} else if (e.target.id === "question") {
+			e.target.id = "answer";
+		} else {
+			return;
+		}
+		$("thead").empty();
+	}
+}
 /** Handle clicking on a clue: show the question or answer.
  *
  * Uses .showing property on clue to determine what to show:
@@ -142,3 +149,4 @@ async function setupAndStart() {
 
 // TODO
 /** On page load, setup and start & add event handler for clicking clues */
+$("#jeopardy").on("click", handleClick);
